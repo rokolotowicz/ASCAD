@@ -2,7 +2,7 @@
 
 > **An AI that bypasses physical hardware defenses to extract AES-128 cryptographic keys via power side-channel analysis.**
 
-This project implements a 1D Convolutional Neural Network (CNN) trained on the [ASCAD dataset](https://github.com/rokolotowicz/ASCAD) to recover secret AES-128 keys from raw power consumption traces — without ever touching the ciphertext, and without brute-forcing the keyspace.
+This project implements a 1D Convolutional Neural Network (CNN) trained on the [ASCAD dataset](https://github.com/ANSSI-FR/ASCAD) to recover secret AES-128 keys from raw power consumption traces — without ever touching the ciphertext, and without brute-forcing the keyspace.
 
 ---
 
