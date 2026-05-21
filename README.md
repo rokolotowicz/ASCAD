@@ -2,7 +2,7 @@
 
 > **An AI that bypasses physical hardware defenses to extract AES-128 cryptographic keys via power side-channel analysis.**
 
-This project implements a 1D Convolutional Neural Network (CNN) trained on the [ASCAD dataset](https://github.com/ANSSI-FR/ASCAD) to recover secret AES-128 keys from raw power consumption traces — without ever touching the ciphertext, and without brute-forcing the keyspace.
+This project implements a 1D Convolutional Neural Network (CNN) trained on the [ASCAD dataset](https://github.com/ANSSI-FR/ASCAD) to recover secret AES-128 keys from raw power consumption traces without ever touching the ciphertext, and without brute-forcing the keyspace.
 
 ---
 
@@ -10,7 +10,7 @@ This project implements a 1D Convolutional Neural Network (CNN) trained on the [
 
 Modern encryption like AES is mathematically unbreakable by brute force. But the *physical hardware* running it leaks information.
 
-When a CPU executes AES, it passes data through the **S-Box** — a non-linear operation that XORs the plaintext with the secret key, then substitutes the result for a completely different byte. At the silicon level, flipping bits from `0` → `1` requires microscopic bursts of electricity.
+When a CPU executes AES, it passes data through the **S-Box** a non-linear operation that XORs the plaintext with the secret key, then substitutes the result for a completely different byte. At the silicon level, flipping bits from `0` → `1` requires microscopic bursts of electricity.
 
 | Processed Byte | Hamming Weight | Power Draw |
 |---|---|---|
@@ -18,7 +18,7 @@ When a CPU executes AES, it passes data through the **S-Box** — a non-linear o
 | `0x00` (all 0s) | 0 | Lower |
 | `0x4B` (mixed) | 4 | Medium |
 
-The device **unintentionally broadcasts** a physical power signature that correlates to the secret key being processed. This is a **power trace** — and it's the attack surface this project exploits.
+The device **unintentionally broadcasts** a physical power signature that correlates to the secret key being processed. This is a **power trace** and it's the attack surface this project exploits.
 
 ---
 
@@ -28,7 +28,7 @@ Rather than classical Differential Power Analysis (DPA), this project trains a d
 
 ### Final Architecture
 
-The final model (`newbest_ascad_model.keras`) uses SELU activations with LeCun initialization — a self-normalizing configuration that eliminates the need for BatchNormalization and allows the network to go wider:
+The final model (`newbest_ascad_model.keras`) uses SELU activations with LeCun initialization a self-normalizing configuration that eliminates the need for BatchNormalization and allows the network to go wider:
 
 ```
 Input: Raw 1D Power Trace  →  shape: (15000, 1)
@@ -53,12 +53,12 @@ Conv1D(256, kernel=11, SELU, LeCun) → AveragePooling1D(2)   ← Focused: S-Box
 
 **Key design choices:**
 
-- **Decreasing kernel sizes (50 → 25 → 11)** — wide early kernels scan the broad power envelope; narrow late kernels lock onto the precise nanosecond the S-Box operation occurs
-- **SELU + LeCun Normal init** — self-normalizing activations keep gradient flow stable through deep layers without explicit BatchNorm; requires no manual tuning of normalization hyperparameters
+- **Decreasing kernel sizes (50 → 25 → 11)** wide early kernels scan the broad power envelope; narrow late kernels lock onto the precise nanosecond the S-Box operation occurs
+- **SELU + LeCun Normal init** self-normalizing activations keep gradient flow stable through deep layers without explicit BatchNorm; requires no manual tuning of normalization hyperparameters
 - **AlphaDropout** — standard Dropout would break SELU's self-normalizing property by destroying the activation mean/variance; AlphaDropout preserves both
-- **GlobalAveragePooling1D** — replaces Flatten to prevent GPU OOM; a 15,000-timestep trace flattened after three conv blocks would produce a ~480,000-element vector per sample
-- **Mixed Precision (float16 compute / float32 variables)** — halves VRAM usage on RTX 3090, enabling batch_size=256 on the full 7GB+ dataset
-- **Output layer forced to float32** — Softmax is numerically unstable at float16; explicitly casting the final layer prevents NaN loss
+- **GlobalAveragePooling1D** replaces Flatten to prevent GPU OOM; a 15,000-timestep trace flattened after three conv blocks would produce a ~480,000-element vector per sample
+- **Mixed Precision (float16 compute / float32 variables)** halves VRAM usage on RTX 3090, enabling batch_size=256 on the full 7GB+ dataset
+- **Output layer forced to float32** Softmax is numerically unstable at float16; explicitly casting the final layer prevents NaN loss
 
 ### Training Configuration
 
@@ -98,7 +98,7 @@ for each trace i:
 rank = position of true_key in argsort(key_score, descending)
 ```
 
-The logic: if the model was trained on `SBox[plaintext XOR key]` as its label, then only the correct key hypothesis will consistently map each plaintext to an output the model assigns high probability. All wrong guesses produce incoherent S-Box outputs — their scores average out to noise and stay low.
+The logic: if the model was trained on `SBox[plaintext XOR key]` as its label, then only the correct key hypothesis will consistently map each plaintext to an output the model assigns high probability. All wrong guesses produce incoherent S-Box outputs their scores average out to noise and stay low.
 
 ### Results
 
