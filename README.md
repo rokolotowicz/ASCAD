@@ -197,4 +197,4 @@ Understanding these vulnerabilities is essential for building **countermeasures*
 
 ## 🔗 Acknowledgements
 
-Dataset and baseline forked from [rokolotowicz/ASCAD](https://github.com/rokolotowicz/ASCAD).
+Dataset and baseline forked from [ASCAD dataset](https://github.com/ANSSI-FR/ASCAD).
